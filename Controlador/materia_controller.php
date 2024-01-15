@@ -1,45 +1,41 @@
 <?php
-// Controlador para Materias
-
 include $_SERVER['DOCUMENT_ROOT'] . '/prueba_trabajo/bd/conexion.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/prueba_trabajo/Modelo/Materia.php';
 
-if ($_SERVER["REQUEST_METHOD"] === "GET" && isset($_GET['action'])) {
-    $action = $_GET['action'];
+// Maneja la solicitud AJAX para obtener la lista de materias
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerMaterias') {
+    // Limpiar el búfer de salida
+    ob_clean();
 
-    switch ($action) {
-        case 'obtenerMaterias':
-            // Obtiene todas las materias desde la base de datos
-            $materia = new Materia();
-            $materias = $materia->obtenerMaterias($pdo);
+    $listaMaterias = [];
 
-            // Retorna una respuesta AJAX (puede ser un mensaje de éxito o cualquier otro dato)
-            if ($materias) {
-                echo json_encode($materias);
-            } else {
-                echo json_encode(['error' => 'Error al obtener las materias']);
+    try {
+        // Verifica la conexión a la base de datos
+        if (!$pdo) {
+            throw new Exception('Error de conexión a la base de datos');
+        }
+
+        $query = "SELECT * FROM materia";
+        $stmt = $pdo->query($query);
+
+        if ($stmt) {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $listaMaterias[] = $row;
             }
-            break;
 
-        default:
-            echo json_encode(['error' => 'Acción no válida']);
-            break;
+            // Una vez que hayas obtenido las materias, convierte el array en formato JSON
+            header('Content-Type: application/json');
+            echo json_encode($listaMaterias);
+            exit;
+        } else {
+            throw new Exception('Error al obtener la lista de materias');
+        }
+    } catch (Exception $e) {
+        echo json_encode(['error' => $e->getMessage()]);
+        exit;
     }
-} elseif ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['nombre'], $_POST['descripcion'])) {
-    // Agrega una nueva materia a la base de datos
-    $nombre = $_POST['nombre'];
-    $descripcion = $_POST['descripcion'];
-
-    $materia = new Materia($nombre, $descripcion);
-    $resultado = $materia->guardar($pdo);
-
-    // Retorna una respuesta AJAX (puede ser un mensaje de éxito o cualquier otro dato)
-    if ($resultado) {
-        echo json_encode(['mensaje' => 'Materia agregada con éxito']);
-    } else {
-        echo json_encode(['error' => 'Error al agregar la materia']);
-    }
-} else {
-    echo json_encode(['error' => 'Solicitud no válida']);
 }
+
+// Agregar otros métodos y rutas para el controlador Materia según tus necesidades
+
 ?>
