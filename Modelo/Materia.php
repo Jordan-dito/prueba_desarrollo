@@ -21,19 +21,22 @@ class Materia {
         return $this->descripcion;
     }
 
-    // Métodos para interactuar con la base de datos
-    public function guardar() {
-        // Implementa aquí la lógica para guardar la materia en la base de datos (utilizando PDO).
-    }
+    
+    public function obtenerMaterias($pdo) {
+        try {
+            $query = "SELECT * FROM materias";  // Reemplaza 'materias' con el nombre real de tu tabla
+            $stmt = $pdo->query($query);
 
-    public function actualizar() {
-        // Implementa aquí la lógica para actualizar la materia en la base de datos (utilizando PDO).
+            if ($stmt) {
+                $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                return $materias;
+            } else {
+                throw new Exception('Error al obtener las materias');
+            }
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
     }
-
-    public function eliminar() {
-        // Implementa aquí la lógica para eliminar la materia de la base de datos (utilizando PDO).
-    }
-
     // Puedes agregar otros métodos relacionados con el modelo Materia aquí
 }
 ?>
