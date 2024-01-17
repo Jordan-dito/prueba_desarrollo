@@ -21,39 +21,26 @@ class Materia {
         return $this->descripcion;
     }
 
-    // Método para guardar una nueva materia en la base de datos
+    // Método para guardar la materia en la base de datos
+    // Ejemplo de método para guardar un profesor en la base de datos
     public function guardar($pdo) {
         try {
-            $query = "INSERT INTO materias (nombre, descripcion) VALUES (:nombre, :descripcion)";
-            $stmt = $pdo->prepare($query);
-            $stmt->bindParam(':nombre', $this->nombre);
-            $stmt->bindParam(':descripcion', $this->descripcion);
-
-            $stmt->execute();
-
-            // Actualiza el ID con el ID generado por la base de datos
-            $this->id = $pdo->lastInsertId();
+            // Si el ID existe, actualiza el registro; de lo contrario, inserta uno nuevo
+            if ($this->id) {
+                $query = "UPDATE materia SET nombre = ?, descripcion = ? WHERE id = ?";
+                $stmt = $pdo->prepare($query);
+                $stmt->execute([$this->nombre, $this->descripcion, $this->id]);
+            } else {
+                $query = "INSERT INTO materia (nombre, descripcion) VALUES (?, ?)";
+                $stmt = $pdo->prepare($query);
+                $stmt->execute([$this->nombre, $this->descripcion]);
+                $this->id = $pdo->lastInsertId(); // Obtén el ID generado automáticamente
+            }
 
             return true;
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
-        }
-    }
-
-    // Método para obtener todas las materias desde la base de datos
-    public function obtenerMaterias($pdo) {
-        try {
-            $query = "SELECT * FROM materias";  // Reemplaza 'materias' con el nombre real de tu tabla
-            $stmt = $pdo->query($query);
-
-            if ($stmt) {
-                $materias = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                return $materias;
-            } else {
-                throw new Exception('Error al obtener las materias');
-            }
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
+        } catch (PDOException $e) {
+            // Manejar el error
+            return false;
         }
     }
 
